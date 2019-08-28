@@ -34,12 +34,15 @@ class RekapitulasiController extends Controller
         $kabupaten_untuk_select2 = array();
         $kecamatan_untuk_select2 = array();
         foreach($provinsi as $item){
+            $provinsi_untuk_select2[$item->null] = 'Pilih Provinsi';
             $provinsi_untuk_select2[$item->id_prov] = $item->nama;
         }
         foreach($kabupaten as $item){
+            $kabupaten_untuk_select2[$item->null] = 'Pilih Kabupaten';
             $kabupaten_untuk_select2[$item->id_kab] = $item->nama;
         }
         foreach($kecamatan as $item){
+            $kecamatan_untuk_select2[$item->null] = 'Pilih Kecamatan';
             $kecamatan_untuk_select2[$item->id_kec] = $item->nama;
         }
         return view('admin_lembaga.rekapitulasi.index', compact('pemilihan', 'provinsi_untuk_select2','kabupaten_untuk_select2','kecamatan_untuk_select2'));
@@ -67,7 +70,7 @@ class RekapitulasiController extends Controller
                         ->where('tps.kab_id', $request->kabupaten)
                         ->where('tps.kec_id', $request->kecamatan)
                         ->where('tps.id_pemilihan', $pemilihan->id)
-                        ->get();     
+                        ->get();    
             
             $array = [];
             $total_suara = [];

@@ -98,6 +98,7 @@
 				success: function(data){
 					var toAppend = '';
 					$("select[name='kab_id']").empty();
+					toAppend += '<option value="totalkab">Seluruh Kabupaten</option>';
 					for (var key in data) {
 						if (data.hasOwnProperty(key)) {
 							toAppend += '<option value="'+ key +'">'+data[key]+'</option>';
@@ -122,6 +123,7 @@
 				success: function(data){
 					var toAppend = '';
 					$("select[name='kec_id']").empty();
+					toAppend += '<option value="totalkec">Seluruh Kecamatan</option>';
 					for (var key in data) {
 						if (data.hasOwnProperty(key)) {
 							toAppend += '<option value="'+ key +'">'+data[key]+'</option>';
@@ -146,6 +148,7 @@
 				success: function(data){
 					var toAppend = '';
 					$("select[name='kel_id']").empty();
+					toAppend += '<option value="totalkel">Seluruh Kelurahan</option>';
 					for (var key in data) {
 						if (data.hasOwnProperty(key)) {
 							toAppend += '<option value="'+ key +'">'+data[key]+'</option>';
