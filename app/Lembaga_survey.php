@@ -19,11 +19,11 @@ class Lembaga_survey extends Model
     public static function rules($update = false, $id = null)
     {
         $commun = [
-            'nama' => 'required|max:100',
-            'prov_id' => 'required|numeric',
-            'kab_id' => 'required|numeric',
-            'kec_id' => 'numeric',
-            'kontak' => 'required|max:50',
+            'nama' => ['required', 'max:100'],
+            'prov_id' => ['required', 'numeric'],
+            'kab_id' => ['required', 'numeric'],
+            'kec_id' => ['nullable', 'numeric'],
+            'kontak' => ['required', 'max:50'],
         ];
         return $commun;
    }
@@ -40,5 +40,3 @@ class Lembaga_survey extends Model
     return $this->hasOne('App\Kecamatan', 'id_kec', 'kec_id');
    }
 }
-
-
