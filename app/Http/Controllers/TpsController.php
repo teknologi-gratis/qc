@@ -21,31 +21,32 @@ use Auth;
 
 class TpsController extends Controller
 {
-    public function tps_import(request $request) 
-	{
-		// validasi
-		$this->validate($request, [
-			'file' => 'required|mimes:csv,xls,xlsx'
-		]);
- 
-		// menangkap file excel
-		$file = $request->file('file');
- 
-		// membuat nama file unik
-		$nama_file = rand().$file->getClientOriginalName();
- 
-		// upload ke folder file_siswa di dalam folder public
-		$file->move('file_tps',$nama_file);
- 
-		// import data
+    public function tps_import(Request $request)
+    {
+    		// validasi
+    		$this->validate($request, [
+    			'file' => ['required', 'mimes:csv,xls,xlsx']
+    		]);
+
+    		// menangkap file excel
+    		$file = $request->file('file');
+
+    		// membuat nama file unik
+    		$nama_file = rand().$file->getClientOriginalName();
+
+    		// upload ke folder file_siswa di dalam folder public
+    		$file->move('file_tps',$nama_file);
+
+    		// import data
         Excel::import(new TpsImport, public_path('/file_tps/'.$nama_file));
-        
-		// notifikasi dengan session
-		Session::flash('sukses','Data Tps Berhasil Diimport!');
- 
-		// alihkan halaman kembali
-		return redirect('/admin/tps');
-	}
+
+    		// notifikasi dengan session
+    		Session::flash('sukses','Data Tps Berhasil Diimport!');
+
+    		// alihkan halaman kembali
+    		return redirect('/admin/tps');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -54,7 +55,6 @@ class TpsController extends Controller
     public function index()
     {
         $items = Tps::latest('updated_at')->with('lembaga_survey','provinsi','kabupaten','kecamatan','kelurahan')->get();
-        //dd($items);
         $roles = config('variables.role');
         return view('admin.tps.index', compact('items','roles'));
     }
@@ -72,7 +72,7 @@ class TpsController extends Controller
         $saksis=User::where('role', 20)->get();
         $lembaga_survey=Lembaga_survey::where('status','aktif')->get();
         $lembaga_survey_untuk_select2 = array();
-        
+
         $provinsi_untuk_select2 = $kabupaten_untuk_select2 = $kecamatan_untuk_select2 = $saksi_untuk_select2 = $lembaga_survey_untuk_select2 = array();
 
         foreach($provinsi as $item){
@@ -102,23 +102,12 @@ class TpsController extends Controller
      */
     public function store(Request $request)
     {
-        
+
         $this->validate($request, Tps::rules());
-        
+
         Tps::create($request->all());
 
         return back()->withSuccess(trans('app.success_store'));
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
     }
 
     /**
@@ -129,7 +118,7 @@ class TpsController extends Controller
      */
     public function edit($id)
     {
-        
+
         $item = Tps::findOrFail($id);
         $provinsi=Provinsi::all()->toArray();
         $kabupaten=Kabupaten::where('id_prov',$item->prov_id)->get()->toArray();
@@ -192,11 +181,6 @@ class TpsController extends Controller
     {
         Tps::destroy($id);
 
-        return back()->withSuccess(trans('app.success_destroy')); 
+        return back()->withSuccess(trans('app.success_destroy'));
     }
-
-    
-
-    
 }
-
