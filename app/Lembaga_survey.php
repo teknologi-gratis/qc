@@ -22,7 +22,7 @@ class Lembaga_survey extends Model
             'nama' => ['required', 'max:100'],
             'prov_id' => ['required', 'numeric'],
             'kab_id' => ['required', 'numeric'],
-            'kec_id' => ['nullable', 'numeric'],
+            'kec_id' => ['required', 'numeric'],
             'kontak' => ['required', 'max:50'],
         ];
         return $commun;
