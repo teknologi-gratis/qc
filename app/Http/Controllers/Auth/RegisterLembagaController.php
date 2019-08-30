@@ -18,24 +18,24 @@ class RegisterLembagaController extends Controller
      */
     public function index()
     {
-        $provinsi=Provinsi::all();
-        $kabupaten=Kabupaten::all();
-        $kecamatan=Kecamatan::all();
-        $provinsi_untuk_select2 = array();
-        $kabupaten_untuk_select2 = array();
-        $kecamatan_untuk_select2 = array();
-        foreach($provinsi as $item){
-            $provinsi_untuk_select2[$item->id_prov] = $item->nama;
-        }
-        foreach($kabupaten as $item){
-            $kabupaten_untuk_select2[$item->id_kab] = $item->nama;
-        }
-        foreach($kecamatan as $item){
-            $kecamatan_untuk_select2[$item->id_kec] = $item->nama;
-        }
-        return view('auth.register_lembaga', compact('provinsi_untuk_select2','kabupaten_untuk_select2','kecamatan_untuk_select2'));
+        $provinsi = Provinsi::select('nama', 'id_prov')->get();
+        return view('auth.register_lembaga', compact('provinsi'));
     }
-        
+
+    public function getKabupaten(Request $request)
+    {
+        return response()->json(Kabupaten::whereIdProv($request->id)->get());
+    }
+
+    public function getKecamatan(Request $request)
+    {
+        return response()->json(Kecamatan::whereIdKab($request->id)->get());
+    }
+
+    public function getKelurahan(Request $request)
+    {
+        return response()->json(Kelurahan::whereIdKec($request->id)->get());
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -47,6 +47,5 @@ class RegisterLembagaController extends Controller
         $this->validate($request, Lembaga_survey::rules());
         $lembaga = Lembaga_survey::create($request->all());
         return redirect('/registrasi_akun/'.$lembaga->id)->withSuccess(trans('app.success_store'));
-    } 
+    }
 }
-

@@ -23,9 +23,9 @@ Route::get('/rekapitulasi_suara', 'RekapitulasiController@index')->name('rekapit
 Route::post('/rekapitulasi_suara_proses', 'RekapitulasiController@create')->name('rekapitulasi_suara_proses');
 
 // Ajax rekapitulasi
-Route::get('rekapitulasi/ajax/kabupaten/{id}', 'RekapitulasiController@getKabupaten')->name('ajax.kabupaten');
-Route::get('rekapitulasi/ajax/kecamatan/{id}', 'RekapitulasiController@getKecamatan')->name('ajax.kecamatan');
-Route::get('rekapitulasi/ajax/kelurahan/{id}', 'RekapitulasiController@getKelurahan')->name('ajax.kelurahan');
+Route::get('ajax/kabupaten/{id}', 'Auth\RegisterLembagaController@getKabupaten')->name('ajax.kabupaten');
+Route::get('ajax/kecamatan/{id}', 'Auth\RegisterLembagaController@getKecamatan')->name('ajax.kecamatan');
+Route::get('ajax/kelurahan/{id}', 'Auth\RegisterLembagaController@getKelurahan')->name('ajax.kelurahan');
 Route::post('rekapitulasi/ajax/filter', 'RekapitulasiController@filter')->name('ajax.filter');
 
 /*
@@ -49,7 +49,7 @@ Route::group(['prefix' => ADMIN, 'as' => ADMIN . '.', 'middleware'=>['auth', 'Ro
     //import saksi & tps lembaga
     // Route::post('saksi/import_excel','SaksiLembagaController@import_excel');
     // Route::post('tps/import_excel','TpsLembagaController@tpss_import');
-   
+
     Route::get('pemilihan/calon/{id}', 'CalonController@index');
     Route::get('pemilihan/calon/create/{id}', 'CalonController@create');
     Route::post('pemilihan/calon/', 'CalonController@store');
@@ -59,7 +59,7 @@ Route::group(['prefix' => ADMIN, 'as' => ADMIN . '.', 'middleware'=>['auth', 'Ro
     // });
     Route::put('pemilihan/calon/{id}', 'CalonController@update');
     Route::delete('pemilihan/calon/{id}', 'CalonController@destroy');
-    
+
 
     //Pemilihan Tiap Lembaga
     // Route::get('lembaga/pemilihan/{id}', 'PemilihanLembagaController@index');
@@ -69,7 +69,7 @@ Route::group(['prefix' => ADMIN, 'as' => ADMIN . '.', 'middleware'=>['auth', 'Ro
     // Route::put('lembaga/pemilihan/{id}', 'PemilihanLembagaController@update');
     // Route::delete('lembaga/pemilihan/{id}', 'PemilihanLembagaController@destroy');
 
-    
+
     //Saksi Tiap Lembaga
     // Route::get('lembaga/saksi/{id}', 'SaksiLembagaController@index');
     // Route::get('lembaga/saksi/create/{id}', 'SaksiLembagaController@create');
@@ -78,7 +78,7 @@ Route::group(['prefix' => ADMIN, 'as' => ADMIN . '.', 'middleware'=>['auth', 'Ro
     // Route::put('lembaga/saksi/{id}', 'SaksiLembagaController@update');
     // Route::delete('lembaga/saksi/{id}', 'SaksiLembagaController@destroy');
 
-    
+
     //TPS Tiap Lembaga
     // Route::get('lembaga/tps/{id}', 'TpsLembagaController@index')->name('tps_lembaga');
     // Route::get('lembaga/tps/create/{id}', 'TpsLembagaController@create');
@@ -93,23 +93,21 @@ Route::group(['prefix' => ADMIN, 'as' => ADMIN . '.', 'middleware'=>['auth', 'Ro
 | Admin Lembaga
 |------------------------------------------------------------------------------------
 */
-Route::group(['prefix' => 'admin_lembaga', 'as' => 'admin_lembaga' . '.', 'middleware'=>['auth', 'Role:15']], function () {
-    Route::get('/', 'Admin_lembaga\DashboardController@index')->name('dash'); 
+Route::group(['prefix' => 'admin_lembaga', 'as' => 'admin_lembaga.', 'middleware'=>['auth', 'Role:15']], function () {
+    Route::get('/', 'Admin_lembaga\DashboardController@index')->name('dash');
     Route::resource('users', 'Admin_lembaga\UserController');
     Route::get('/profil', 'Admin_lembaga\ProfilLembagaController@index')->name('profil');
     Route::resource('pemilihan', 'Admin_lembaga\PemilihanController');
     // Route::resource('saksi', 'Admin_lembaga\SaksiPemilihanController');
     Route::resource('tps', 'Admin_lembaga\TpsController');
     Route::post('/generateSample', 'Admin_lembaga\TpsController@generateSample');
-    
+
     //import
     Route::post('users/import_excel','Admin_lembaga\UserController@import_excel');
     Route::post('tps/import_excel','Admin_lembaga\TpsController@tps_import');
     //import pemilihan
     Route::post('saksi/import_excel','Admin_lembaga\SaksiPemilihanController@import_excel');
     Route::post('tpspem/import_excel','Admin_lembaga\TpsPemilihanController@tpss_import');
-   
-    
 });
 
 // Route::get('/', function () {
@@ -150,4 +148,3 @@ Route::post('get_kelurahan_by_kecamatan', 'DaerahController@getKelurahanByKecama
 //rekapitulasi
 Route::post('get_rekapitulasi', 'RekapitulasiController@rekapitulasi');
 Route::get('/save/{id}', ['as' => 'gambar.download', 'uses' => 'Admin_lembaga\TpsController@downloadImage']);
-

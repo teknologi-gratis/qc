@@ -13,6 +13,7 @@
   <!-- Styles -->
   <link href="{{ asset('/css/app.css') }}" rel="stylesheet">
   <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  @routes
 </head>
 <body class="app">
 
@@ -30,6 +31,6 @@
         @yield('content')
       </div>
     </div>
-  
+  @yield('js')
 </body>
 </html>
