@@ -22,19 +22,25 @@ Route::post('/registrasi_akun_proses', 'Auth\RegisterAkunController@create')->na
 Route::get('/rekapitulasi_suara', 'RekapitulasiController@index')->name('rekapitulasi.index');
 Route::post('/rekapitulasi_suara_proses', 'RekapitulasiController@create')->name('rekapitulasi_suara_proses');
 
+// Ajax rekapitulasi
+Route::get('rekapitulasi/ajax/kabupaten/{id}', 'RekapitulasiController@getKabupaten')->name('ajax.kabupaten');
+Route::get('rekapitulasi/ajax/kecamatan/{id}', 'RekapitulasiController@getKecamatan')->name('ajax.kecamatan');
+Route::get('rekapitulasi/ajax/kelurahan/{id}', 'RekapitulasiController@getKelurahan')->name('ajax.kelurahan');
+Route::post('rekapitulasi/ajax/filter', 'RekapitulasiController@filter')->name('ajax.filter');
+
 /*
 |------------------------------------------------------------------------------------
 | Admin
 |------------------------------------------------------------------------------------
 */
 Route::group(['prefix' => ADMIN, 'as' => ADMIN . '.', 'middleware'=>['auth', 'Role:10']], function () {
-    Route::get('/', 'DashboardController@index')->name('dash'); 
+    Route::get('/', 'DashboardController@index')->name('dash');
     Route::resource('users', 'UserController');
     Route::resource('lembaga', 'LembagaController');
     Route::resource('pemilihan', 'PemilihanController');
     Route::resource('tps', 'TpsController');
     Route::get('lembaga/data/{id}', 'GabunganController@index')->name('lembaga');
-    
+
 
     //import
     Route::post('users/import_excel','UserController@import_excel');

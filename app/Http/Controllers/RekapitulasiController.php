@@ -18,6 +18,10 @@ use Auth;
 
 class RekapitulasiController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
     /**
      * Display a listing of the resource.
      *
@@ -25,138 +29,123 @@ class RekapitulasiController extends Controller
      */
     public function index()
     {
-        $item=Tps::all();
-        $pemilihan=Pemilihan::where('lembaga_id', Auth::user()->lembaga_id)->latest('updated_at')->with('provinsi','kabupaten')->get();
-        $provinsi=Provinsi::all();
-        $kabupaten=Kabupaten::all();
-        $kecamatan=Kecamatan::all();
-        $provinsi_untuk_select2 = array();
-        $kabupaten_untuk_select2 = array();
-        $kecamatan_untuk_select2 = array();
-        foreach($provinsi as $item){
-            $provinsi_untuk_select2[$item->null] = 'Pilih Provinsi';
-            $provinsi_untuk_select2[$item->id_prov] = $item->nama;
-        }
-        foreach($kabupaten as $item){
-            $kabupaten_untuk_select2[$item->null] = 'Pilih Kabupaten';
-            $kabupaten_untuk_select2[$item->id_kab] = $item->nama;
-        }
-        foreach($kecamatan as $item){
-            $kecamatan_untuk_select2[$item->null] = 'Pilih Kecamatan';
-            $kecamatan_untuk_select2[$item->id_kec] = $item->nama;
-        }
-        return view('admin_lembaga.rekapitulasi.index', compact('pemilihan', 'provinsi_untuk_select2','kabupaten_untuk_select2','kecamatan_untuk_select2'));
+        $pemilihan = Pemilihan::whereLembagaId(Auth::user()->lembaga_id)->latest('updated_at')->get();
+        $provinsi = Provinsi::select('nama', 'id_prov')->get();
+
+        return view('admin_lembaga.rekapitulasi.index', compact('provinsi', 'pemilihan'));
     }
-        
+
+    public function getKabupaten(Request $request)
+    {
+        return response()->json(Kabupaten::whereIdProv($request->id)->get());
+    }
+
+    public function getKecamatan(Request $request)
+    {
+        return response()->json(Kecamatan::whereIdKab($request->id)->get());
+    }
+
+    public function getKelurahan(Request $request)
+    {
+        return response()->json(Kelurahan::whereIdKec($request->id)->get());
+    }
 
     /**
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(request $request)
+    public function create(Request $request)
     {
         $this->validate($request, Tps::rules());
         $tps = Tps::create($request->all());
         return redirect('/rekapitulasi_suara'.$tps->id)->withSuccess(trans('app.success_store'));
-    } 
+    }
 
+    public function filter(Request $request)
+    {
+        $result = [];
+        $totalSuara = 0;
+        $code = 200;
+        $suaraTiapTPS = [];
+        $totalSuaraTiapCalon = [];
+        $pemilihan = Pemilihan::whereLembagaId(Auth::user()->lembaga_id)->whereProvId($request->provinsi)->whereTahun($request->tahun)->first();
 
-    public function rekapitulasi(Request $request){
-        if($request->has('filterByKecamatan')){
-            $pemilihan = Pemilihan::where('prov_id', $request->provinsi)->where('kab_id', $request->kabupaten)->where('tahun', $request->tahun)->first();
-            $calon = Calon::where('pemilihan_id', $pemilihan->id)->get();
-            $tps = Tps::where('tps.prov_id', $request->provinsi)
-                        ->where('tps.kab_id', $request->kabupaten)
-                        ->where('tps.kec_id', $request->kecamatan)
-                        ->where('tps.id_pemilihan', $pemilihan->id)
-                        ->get();    
-            
-            $array = [];
-            $total_suara = [];
-            foreach($tps as $key => $t){
-                $calons= [];
-                foreach($calon as $cln){
-                    $suara = Suara::where('calon_id', $cln->id)->where('tps_id', $t->id)->first();
-                    if($suara !== null){
-                        // dd($suara->total_suara);
-                            $cln->suara = $suara->total_suara;
-                    } else {
-                        $cln->suara = 0;
-                    }
-                    array_push($calons, [
-                            'suara' => $cln->suara,
-                            'nama_utama_calon' => $cln->calon_utama_nama,
-                            'nama_wakil_calon' => $cln->calon_wakil_nama]);
-                    }
-                        if($key !== 0){
-                            if($t->kel_id == $tps[$key-1]->kel_id){
-                                    $total_suara = [];
+        if (! is_null($pemilihan)) {
+            $semuaCalon = Calon::wherePemilihanId($pemilihan->id)->get();
+            $tps = Tps::whereProvId($request->provinsi)->whereIdPemilihan($pemilihan->id);
+            if ($request->filter == 'kabupaten' && $request->has('kabupaten')) {
+                $tps = $tps->whereKabId($request->kabupaten);
+            }
+            if ($request->filter == 'kecamatan' && $request->has('kecamatan')) {
+                $tps = $tps->whereKecId($request->kecamatan);
+            }
+            if ($request->filter == 'kelurahan' && $request->has('kelurahan')) {
+                $tps = $tps->whereKelId($request->kelurahan);
+            }
+            $tps = $tps->get();
+
+            if (! is_null($tps)) {
+                $suaraTotalTiapCalon = [];
+                foreach ($tps as $key => $row) {
+                    $totalSuaraPerTPS = 0;
+                    $suaraTiapCalon = [];
+                    foreach ($semuaCalon as $calon) {
+                        $calonId = intval($calon->id);
+                        $suara = Suara::whereCalonId($calonId)->whereTpsId($row->id)->first();
+                        if (! is_null($suara)) {
+                            $totalSuaraPerTPS += $suara->total_suara;
+                            if (isset($suaraTiapCalon[$calonId])) {
+                                $suaraTiapCalon[$calonId] += $suara->total_suara;
+                            } else {
+                                $suaraTiapCalon[$calonId] = $suara->total_suara ?? 0;
                             }
+                            if (! isset($totalSuaraTiapCalon[$calonId]['nama_pasangan'])) {
+                                $totalSuaraTiapCalon[$calonId]['nama_pasangan'] = $calon->calon_utama_nama . ' & ' . $calon->calon_wakil_nama;
+                            }
+                            if (isset($totalSuaraTiapCalon[$calonId]['total_suara'])) {
+                                $total = $totalSuaraTiapCalon[$calonId]['total_suara'];
+                                $total += $suaraTiapCalon[$calonId];
+                            } else {
+                                $totalSuaraTiapCalon[$calonId]['total_suara'] = array_key_exists($calonId, $suaraTiapCalon) ? $suaraTiapCalon[$calonId] : 0;
+                            }
+                            if (isset($suaraTotalTiapCalon[$calonId])) {
+                                $suaraTotalTiapCalon[$calonId] += $suara->total_suara;
+                            } else {
+                                $suaraTotalTiapCalon[$calonId] = $suara->total_suara ?? 0;
+                            }
+
                         } else {
-                            array_push($total_suara, ['calon' => $calons, 'tps' => $t]);
-                    }       
-                }
-            
-            $hasil = [];
-            foreach($total_suara as $key => $ts){
-                $keluarahan = Kelurahan::find($ts['tps']->id);
-                if($key == 0){
-                    $ts->kelurahan = $keluarahan->nama;
-                    $calon = [];
-                    foreach($ts['calon'] as $kc => $cln){
-                        array_push($calon, ['calon' . $kc => $cln]);
+                              $result = [
+                                  'message' => 'Tidak ada data.'
+                              ];
+                              $code = 404;
+                              return response()->json($result, $code);
+                        }
                     }
-                    $ts->calon = $calon;
-                    array_push($hasil, $ts);
-                } else {    
-                    if($total_suara[$key-1]['tps']->kel->id == $ts['tps']->kel_id){
-                        
-                    }
+                    $totalSuara += $totalSuaraPerTPS;
+                    $suaraTiapTPS['TPS_' . $row->id] = $suaraTiapCalon;
                 }
+                $result = [
+                    'total' => $suaraTotalTiapCalon,
+                    'total_suara_tiap_calon' => $suaraTotalTiapCalon,
+                    'total_suara' => $totalSuara,
+                    'suara' => $suaraTiapTPS,
+                    'calon' => $semuaCalon
+                ];
+            } else {
+                $result = [
+                    'message' => 'Tidak ada TPS.'
+                ];
+                $code = 404;
             }
-
-            return response()->json(['data' => $hasil]);            
- 
-            
+        } else {
+            $result = [
+                'message' => 'Tidak ada data.'
+            ];
+            $code = 404;
         }
-        $pemilihan = Pemilihan::where('prov_id', $request->provinsi)->where('kab_id', $request->kabupaten)->where('tahun', $request->tahun)->first();
-        $calon = Calon::where('pemilihan_id', $pemilihan->id)->get();
-        $tps = Tps::where('prov_id', $request->provinsi)
-                    ->where('kab_id', $request->kabupaten)
-                    ->where('kec_id', $request->kecamatan)
-                    ->where('kel_id', $request->kelurahan)
-                    ->where('id_pemilihan', $pemilihan->id) 
-                    ->get();
 
-        $array = [];
-        $total_suara = [];
-        foreach($tps as $t){
-            $calons= [];
-            foreach($calon as $cln){
-                $suara = Suara::where('calon_id', $cln->id)->where('tps_id', $t->id)->first();
-                if($suara !== null){
-                    // dd($suara->total_suara);
-                    $cln->suara = $suara->total_suara;
-                } else {
-                    $cln->suara = 0;
-                }
-                array_push($calons, [
-                    'suara' => $cln->suara,
-                    'nama_utama_calon' => $cln->calon_utama_nama,
-                    'nama_wakil_calon' => $cln->calon_wakil_nama]);
-            }
-            // $result = [ 
-            //     'tps' => $t,
-            //     'calon' => $calons
-            // ];
-            array_push($total_suara, ['calon' => $calons, 'tps' => $t]);      
-            // if($t->id == 7){
-            //     return response()->json($array);        
-            // }  
-        }
-        return response()->json($total_suara);        
-        
+        return response()->json($result, $code);
     }
 }
-
