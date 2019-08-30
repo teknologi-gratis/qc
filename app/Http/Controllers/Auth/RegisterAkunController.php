@@ -21,9 +21,10 @@ class RegisterAkunController extends Controller
     {
         $lembaga = Lembaga_survey::findOrFail($id);
         $lembaga_id = $id;
-        return view('auth.register_akun', compact('lembaga','lembaga_id'));
+        $role = 15;
+        return view('auth.register_akun', compact('lembaga','lembaga_id', 'role'));
     }
-        
+
 
     /**
      * Show the form for creating a new resource.
@@ -32,12 +33,11 @@ class RegisterAkunController extends Controller
      */
     public function create(request $request)
     {
-        // dd($request);
         $this->validate($request, User::rules());
         $user = User::create($request->all());
-        return redirect('/login/'.$user->id)->withSuccess(trans('app.success_store'));
+        return redirect('/login/')->withSuccess(trans('app.success_store'));
 
-    } 
+    }
 
     // protected function validator(array $data)
     // {
@@ -71,6 +71,5 @@ class RegisterAkunController extends Controller
     // }
 
 
-    
-}
 
+}
