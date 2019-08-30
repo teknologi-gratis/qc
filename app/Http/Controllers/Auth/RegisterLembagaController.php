@@ -8,6 +8,7 @@ use App\Lembaga_survey;
 use App\Provinsi;
 use App\Kabupaten;
 use App\Kecamatan;
+use App\Kelurahan;
 
 class RegisterLembagaController extends Controller
 {
