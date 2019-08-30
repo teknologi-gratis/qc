@@ -14,7 +14,7 @@
                         <form method="POST" id="filter-rekapitulasi">
                             @csrf
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md">
                                     <div class="form-group">
                                         <label for="tahun">Tahun Pemilihan</label>
                                         <select name="tahun" id="tahun" class="form-control select2">
@@ -24,10 +24,10 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md">
                                     {!! Form::mySelect('jenis', 'Jenis Pemilihan', config('variables.jenis_pil'), isset($item->jenis) ? $item->jenis : null, ['class' => 'form-control select2']) !!}
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md">
                                     <div class="form-group">
                                         <label for="jenis-filter">Jenis Filter</label>
                                         <select id="jenis-filter" name="filter" class="form-control select2">
@@ -38,6 +38,18 @@
                                         </select>
                                     </div>
                                 </div>
+                                @if(Auth::user()->role == 10)
+                                <div class="col-md">
+                                    <div class="form-group">
+                                        <label for="lembaga_survey">Lembaga Survey</label>
+                                        <select id="lembaga_survey" name="lembaga_survey" class="form-control select2">
+                                            @foreach($lembaga as $item)
+                                                <option value="{{ $item->id }}">{{ $item->nama }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                @endif
                             </div>
                             <div class="row">
                                 <div class="col-md-6">

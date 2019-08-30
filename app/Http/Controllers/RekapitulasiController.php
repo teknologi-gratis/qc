@@ -29,25 +29,17 @@ class RekapitulasiController extends Controller
      */
     public function index()
     {
-        $pemilihan = Pemilihan::whereLembagaId(Auth::user()->lembaga_id)->latest('updated_at')->get();
+        if (Auth::user()->role == 10) {
+            $pemilihan = Pemilihan::latest('updated_at')->get();
+            $lembaga = Lembaga_survey::select('id', 'nama')->get();
+        } else {
+            $pemilihan = Pemilihan::whereLembagaId(Auth::user()->lembaga_id)->latest('updated_at')->get();
+            $lembaga = [];
+        }
+
         $provinsi = Provinsi::select('nama', 'id_prov')->get();
 
-        return view('admin_lembaga.rekapitulasi.index', compact('provinsi', 'pemilihan'));
-    }
-
-    public function getKabupaten(Request $request)
-    {
-        return response()->json(Kabupaten::whereIdProv($request->id)->get());
-    }
-
-    public function getKecamatan(Request $request)
-    {
-        return response()->json(Kecamatan::whereIdKab($request->id)->get());
-    }
-
-    public function getKelurahan(Request $request)
-    {
-        return response()->json(Kelurahan::whereIdKec($request->id)->get());
+        return view('admin_lembaga.rekapitulasi.index', compact('provinsi', 'pemilihan', 'lembaga'));
     }
 
     /**
@@ -69,7 +61,11 @@ class RekapitulasiController extends Controller
         $code = 200;
         $suaraTiapTPS = [];
         $totalSuaraTiapCalon = [];
-        $pemilihan = Pemilihan::whereLembagaId(Auth::user()->lembaga_id)->whereProvId($request->provinsi)->whereTahun($request->tahun)->first();
+        if (Auth::user()->role == 10) {
+            $pemilihan = Pemilihan::whereLembagaId($request->lembaga_survey)->whereProvId($request->provinsi)->whereTahun($request->tahun)->first();
+        } else {
+            $pemilihan = Pemilihan::whereLembagaId(Auth::user()->lembaga_id)->whereProvId($request->provinsi)->whereTahun($request->tahun)->first();
+        }
 
         if (! is_null($pemilihan)) {
             $semuaCalon = Calon::wherePemilihanId($pemilihan->id)->get();
