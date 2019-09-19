@@ -19,30 +19,30 @@ use Auth;
 
 class TpsPemilihanController extends Controller
 {
-    public function tpss_import(request $request) 
+    public function tpss_import(request $request)
 	{
 		// validasi
 		$this->validate($request, [
 			'file' => 'required|mimes:csv,xls,xlsx'
 		]);
- 
+
 		// menangkap file excel
 		$file = $request->file('file');
- 
+
 		// membuat nama file unik
 		$nama_file = rand().$file->getClientOriginalName();
- 
+
 		// upload ke folder file_siswa di dalam folder public
 		$file->move('file_tps',$nama_file);
- 
+
 		// import data
         Excel::import(new TpsImport, public_path('/file_tps/'.$nama_file));
-        
+
 		// notifikasi dengan session
 		Session::flash('sukses','Data Tps Berhasil Diimport!');
- 
+
 		// alihkan halaman kembali
-		return redirect('tpsPemilihan');
+		return redirect()->route('tpsPemilihan', $request->id);
 	}
     /**
      * Display a listing of the resource.
@@ -51,9 +51,10 @@ class TpsPemilihanController extends Controller
      */
     public function index($id)
     {
-        $pemilihan = Pemilihan::with('provinsi','kabupaten')->findOrFail($id);
-        $items = Tps::where('id_pemilihan',$id)->get();
-        return view('admin_lembaga.tps_pemilihan.index', compact('items','pemilihan','id'));
+        $lembagaId = Auth::user()->lembaga_id;
+        $pemilihan = Pemilihan::findOrFail($id);
+        $allTps = Tps::whereIdPemilihan($pemilihan->id)->whereLembagaId($lembagaId)->get();
+        return view('admin_lembaga.tps_pemilihan.index', compact('allTps', 'pemilihan', 'id'));
     }
 
     /**
@@ -93,23 +94,12 @@ class TpsPemilihanController extends Controller
      */
     public function store(Request $request)
     {
-        
+
         $this->validate($request, Tps::rules());
-        
+
         Tps::create($request->all());
 
         return back()->withSuccess(trans('app.success_store'));
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
     }
 
     /**
@@ -120,7 +110,7 @@ class TpsPemilihanController extends Controller
      */
     public function edit($id)
     {
-        
+
         $item = TPS::findOrFail($id);
         $provinsi=Provinsi::all()->toArray();
         $kabupaten=Kabupaten::where('id_prov',$item->prov_id)->get()->toArray();
@@ -176,67 +166,79 @@ class TpsPemilihanController extends Controller
     public function destroy($id)
     {
         Tps::destroy($id);
-
-        return back()->withSuccess(trans('app.success_destroy')); 
+        return back()->withSuccess(trans('app.success_destroy'));
     }
 
-    public function generateSample(Request $request){
+    public function generate(Request $request)
+    {
+        $request->validate([
+            'threshold' => ['required']
+        ]);
+
+        $code = 200; // default code
+        $result = collect([]); // membuat object laravel collections
         $lembaga_id = Auth::user()->lembaga_id;
-
-        // // buat generate data TPS
-        // for($i=0; $i<1500;$i++){
-        //     $no_tps = $i+1;
-        //     $data = array(
-        //         'prov_id' => '32',
-        //         'kab_id' => '3212',
-        //         'kec_id' => '321215',
-        //         'kel_id' => '3212152014',
-        //         'total_suara' => rand(1, 1000),
-        //         'suara_tidak_sah' => rand(0,100),
-        //         'no_tps' => $no_tps,
-        //         'is_sample' => 0,
-        //         'created_at' => '2019-06-27 12:27:03',
-        //         'updated_at' => '2019-06-27 12:27:03',
-        //         'lembaga_id' => Auth::user()->lembaga_id,
-        //     );            
-        //     Tps::create($data);
-        // }
-        // exit();
-
-        $all_tps_lembaga = Tps::where('lembaga_id', $lembaga_id)->get();
-        $seluruh_tps_yang_diinput_admin_lembaga = Tps::where('lembaga_id', $lembaga_id)->orderBy('no_tps','asc')->get();
-        $populasi = (int) $seluruh_tps_yang_diinput_admin_lembaga->count();
-        $threshold = $request->threshold * $request->threshold;
-        $jumlah_sampel = floor($populasi / (1 + $populasi * $threshold));
-        $interval = $populasi / $jumlah_sampel;
-        $decimal = floor($interval); 
-        $fraksi = $interval - $decimal;
-        if($fraksi < 0.5){
-            $pembulatan = floor($interval);
+        $pemilihan = Pemilihan::findOrFail($request->id);
+        if ($pemilihan->jenis == 'gubernur') {
+            $daerah = Kabupaten::whereIdProv($pemilihan->prov_id)->get();
         } else {
-            $pembulatan = ceil($interval);
+            $daerah = Kecamatan::whereIdKab($pemilihan->kab_id)->get();
         }
-        for($x = 0; $x < $populasi; $x++){
-            $this_tps = $all_tps_lembaga[$x];
-            if($x % $pembulatan == 0){
-                // sampel
-                $data = array(
-                    'is_sample' => 1
-                );
-                $this_tps->update($data);
+        $total = collect([]);
+        // $total = 0;
+        // return response()->json($daerah);
+        foreach ($daerah as $key => $item) {
+            if ($pemilihan->jenis == 'gubernur') {
+                $allTps = Tps::whereIdPemilihan($pemilihan->id)
+                    ->whereLembagaId($lembaga_id)
+                    ->whereKabId($item->id_kab)
+                    ->get();
             } else {
-                // bukan sampel
-                $data = array(
-                    'is_sample' => 0
-                );
-                $this_tps->update($data);
-            };
-            
-        }  
+                $allTps = Tps::whereIdPemilihan($pemilihan->id)
+                    ->whereLembagaId($lembaga_id)
+                    ->whereKecId($item->id_kec)
+                    ->get();
+            }
 
-        return redirect()->back()->withSuccess('Berhasil generate sampel');
+            $resultTemp = collect([]);
+            if (! is_null($allTps)) {
+                $populasi = $allTps->count();
+                if ($populasi == 0) {
+                    continue;
+                }
+                $threshold = $request->threshold * $request->threshold;
+                $temp = round($populasi / (1 + ($populasi * $threshold)));
+                $jumlahSampel = $temp > 0 ? $temp : 1;
+                // $total->push([$populasi, $jumlahSampel]);
+                $interval = floor($populasi / $jumlahSampel);
+                for($i = 0; $i < $populasi; $i++){
+                    if ($resultTemp->count() == $jumlahSampel) {
+                        break;
+                    }
+                    if($i % $interval == 0) {
+                        $data['id'] = $allTps[$i]->id;
+                        $data['no_tps'] = $allTps[$i]->no_tps;
+                        $data['provinsi'] = $allTps[$i]->provinsi->nama;
+                        $data['kabupaten'] = $allTps[$i]->kabupaten->nama;
+                        $data['kecamatan'] = $allTps[$i]->kecamatan->nama;
+                        $data['kelurahan'] = $allTps[$i]->kelurahan->nama;
+                        $data['total_suara'] = $allTps[$i]->total_suara;
+                        $data['suara_tidak_sah'] = $allTps[$i]->suara_tidak_sah;
+                        $data['jumlah_dpt'] = $allTps[$i]->total_suara + $allTps[$i]->suara_tidak_sah;
+                        $resultTemp->push($data);
+                    }
+                    $total->push(['populasi' => $populasi, 'jumlah_sampel_seharusnya' => $jumlahSampel, 'interval' => $interval, 'jumlah_sampel_diambil' => $resultTemp->count(), 'populasi_ke' => ($i+1)]);
+                }
+                $result->push($resultTemp->toArray());
+            }
+
+        }
+        // return response()->json($total);
+        $message = 'Pengambilan sampel berhasil.';
+        return response()->json([
+            'message' => $message,
+            'data' => $result->collapse(),
+            'proses_pengambilan_sampel' => $total
+        ], $code);
     }
-
-    
 }
-
