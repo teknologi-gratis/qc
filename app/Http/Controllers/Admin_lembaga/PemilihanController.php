@@ -20,7 +20,7 @@ class PemilihanController extends Controller
      */
     public function index()
     {
-        
+
         $items = Pemilihan::where('lembaga_id', Auth::user()->lembaga_id)->latest('updated_at')->with('provinsi','kabupaten')->get();
         $roles = config('variables.role');
         return view('admin_lembaga.pemilihan.index', compact('items'));
@@ -44,7 +44,7 @@ class PemilihanController extends Controller
         foreach($kabupaten as $item){
             $kabupaten_untuk_select2[$item->id_kab] = $item->nama;
         }
-        
+
         return view('admin_lembaga.pemilihan.create', compact('provinsi_untuk_select2','kabupaten_untuk_select2'));
     }
 
@@ -58,7 +58,7 @@ class PemilihanController extends Controller
     {
         // dd($request->all());
         $this->validate($request, Pemilihan::rules());
-        
+
         Pemilihan::create($request->all());
 
         return back()->withSuccess(trans('app.success_store'));
@@ -112,7 +112,9 @@ class PemilihanController extends Controller
 
         $item->update($request->all());
 
-        return redirect()->route('admin_lembaga' . '.pemilihan.index')->withSuccess(trans('app.success_update'));
+        dd($request);
+
+        // return redirect()->route('admin_lembaga' . '.pemilihan.index')->withSuccess(trans('app.success_update'));
     }
 
     /**
@@ -125,7 +127,6 @@ class PemilihanController extends Controller
     {
         Pemilihan::destroy($id);
 
-        return back()->withSuccess(trans('app.success_destroy')); 
+        return back()->withSuccess(trans('app.success_destroy'));
     }
 }
-

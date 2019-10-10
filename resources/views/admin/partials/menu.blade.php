@@ -44,3 +44,11 @@
         <span class="title">Data TPS</span>
     </a>
 </li>
+<li class="nav-item">
+    <a class="sidebar-link {{ starts_with($route, ADMIN . '.tps') ? 'active' : '' }}" href="{{ route(ADMIN . '.rekapitulasi.index') }}">
+        <span class="icon-holder">
+            <i class="c-brown-500 fa fa-volume-up"></i>
+        </span>
+        <span class="title">Rekapitulasi Suara</span>
+    </a>
+</li>

@@ -19,14 +19,13 @@ Route::post('/registrasi_lembaga_proses', 'Auth\RegisterLembagaController@create
 Route::get('/registrasi_akun/{id}', 'Auth\RegisterAkunController@index');
 Route::post('/registrasi_akun_proses', 'Auth\RegisterAkunController@create')->name('registrasi_akun_proses');
 
-Route::get('/rekapitulasi_suara', 'RekapitulasiController@index')->name('rekapitulasi.index');
-Route::post('/rekapitulasi_suara_proses', 'RekapitulasiController@create')->name('rekapitulasi_suara_proses');
+Route::get('/rekapitulasi_suara', 'Admin_lembaga\RekapitulasiController@index')->name('rekapitulasi.index');
 
 // Ajax rekapitulasi
 Route::get('ajax/kabupaten/{id}', 'Auth\RegisterLembagaController@getKabupaten')->name('ajax.kabupaten');
 Route::get('ajax/kecamatan/{id}', 'Auth\RegisterLembagaController@getKecamatan')->name('ajax.kecamatan');
 Route::get('ajax/kelurahan/{id}', 'Auth\RegisterLembagaController@getKelurahan')->name('ajax.kelurahan');
-Route::post('rekapitulasi/ajax/filter', 'RekapitulasiController@filter')->name('ajax.filter');
+Route::post('rekapitulasi/ajax/filter', 'Admin_lembaga\RekapitulasiController@filter')->name('ajax.filter');
 
 /*
 |------------------------------------------------------------------------------------
@@ -40,6 +39,8 @@ Route::group(['prefix' => ADMIN, 'as' => ADMIN . '.', 'middleware'=>['auth', 'Ro
     Route::resource('pemilihan', 'PemilihanController');
     Route::resource('tps', 'TpsController');
     Route::get('lembaga/data/{id}', 'GabunganController@index')->name('lembaga');
+    Route::get('/rekapitulasi_suara', 'RekapitulasiController@index')->name('rekapitulasi.index');
+    Route::post('/rekapitulasi/ajax/filter', 'RekapitulasiController@filter')->name('rekapitulasi.filter');
 
 
     //import
@@ -138,8 +139,11 @@ Route::get('admin_lembaga/pemilihan/tps/create/{id}', 'Admin_lembaga\TpsPemiliha
 Route::post('admin_lembaga/pemilihan/tps/', 'Admin_lembaga\TpsPemilihanController@store');
 Route::get('admin_lembaga/pemilihan/tps/edit/{id}', 'Admin_lembaga\TpsPemilihanController@edit');
 Route::put('admin_lembaga/pemilihan/tps/{id}', 'Admin_lembaga\TpsPemilihanController@update');
+Route::post('admin_lembaga/pemilihan/{id}', 'Admin_lembaga\PemilihanController@update');
 Route::delete('admin_lembaga/pemilihan/tps/{id}', 'Admin_lembaga\TpsPemilihanController@destroy');
 Route::post('/generateSample', 'Admin_lembaga\TpsPemilihanController@generateSample');
+// coba generate
+Route::post('/generate-sample', 'Admin_lembaga\TpsPemilihanController@generate');
 
 Route::post('get_kabupaten_by_provinsi', 'DaerahController@getKabupatenByProvinsi');
 Route::post('get_kecamatan_by_kabupaten', 'DaerahController@getKecamatanByKabupaten');

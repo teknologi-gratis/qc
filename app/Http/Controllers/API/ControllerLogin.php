@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Controller;
 use App\Suara;
 use App\Calon;
@@ -17,22 +18,72 @@ class ControllerLogin extends Controller
             $email = $request->input('email'),
             $password = $request->input('password')
             ]);
-            $role = 20;
 
-            $data = \App\User::where('email', $email)
-            ->where('password', md5($password))->where('role',$role)->get();
+        // $this->validate($request, [
+        //       'email'     => 'required|email',
+        //       'password'  => 'required|min:3'
+        //     ]);
+        // $superadmin_data =  array(
+        //       'email'     => $request->get('email'),
+        //       'password'  => $request->get('password')
+        //        );
+        // $email = $superadmin_data['email'];
+        // $password = bcrypt($superadmin_data['password']);
+
+            $role = 20;
+            // $bcrypt = new Bcrypt(16);
+            // $password1 = $bcrypt->hash($password);
+
+            $data = DB::table('users')
+            ->join('tps','users.id','=','tps.saksi_id')
+            ->where('users.email', $email)
+            ->where('users.role',$role)
+            ->select('users.*','tps.jumlah_dpt','tps.id AS id_tps')
+            ->get();
     if(count($data) > 0){ //mengecek apakah data kosong atau tidak
-      $res['status'] = true;
-      $res['code'] = 200;
-      $res['message'] = "Success!";
-        $res['data'] = $data;
-        return response($res);
+      foreach ($data as $value) {
+        // code...
+        if (password_verify($password, $value->password)) {
+          // code...
+          $res['status'] = true;
+          $res['code'] = 200;
+          $res['message'] = "Success!";
+          $res['data'] = $data;
+          return response($res);
+        } else {
+          $res['status'] = false;
+          $res['code'] = 400;
+          // $res['contoh'] = $password;
+          $res['message'] = "Password Salah Goblok";
+          return response($res);
+        }
+
+      }
     }else{
         $res['status'] = false;
         $res['code'] = 400;
+        // $res['contoh'] = $password;
           $res['message'] = "no";
           return response($res);
       }
+
+    //   if(count($data) > 0){ //mengecek apakah data kosong atau tidak
+    //     if(Hash::check($password, $data->password)){
+    //       $res['status'] = true;
+    //       $res['code'] = 200;
+    //       $res['message'] = "Success!";
+    //       $res['data'] = $data;
+    //       return response($res);
+    //
+    //     } else {
+    //
+    //       $res['status'] = false;
+    //       $res['code'] = 400;
+    //       $res['message'] = "no";
+    //       return response($res);
+    //     }
+    // }
+
     }
 
     public function InputSuara(Request $request){
@@ -64,28 +115,51 @@ class ControllerLogin extends Controller
 
     public function TampilCalon(Request $request){
       $this->validate($request, [
-        $lembaga_id = $request->input('lembaga_id')
+        $lembaga_id = $request->input('lembaga_id'),
+        $tps_id = $request->input('tps_id')
         ]);
 
         $dataCalon = Calon::where('lembaga_id', $lembaga_id)->get()->all();
+        //
+        // $data = DB::table('users')
+        // ->join('tps','users.id','=','tps.saksi_id')
+        // ->where('users.email', $email)
+        // ->where('users.password', md5($password))
+        // ->where('users.role',$role)
+        // ->select('users.*','tps.jumlah_dpt')
+        // ->get();
+
+        // $dataCalon = DB::table('calon')
+        // ->join('suara','calon.id','=','suara.calon_id')
+        // ->where('calon.lembaga_id', $lembaga_id)
+        // ->where('suara.tps_id', $tps_id)
+        // ->select('calon.*','suara.total_suara')
+        // ->get();
 
         if(count($dataCalon)>0){
 
-          $respon = array('status'=>200,'data'=>$dataCalon,'message'=>'OK!');
-          return response()->json($respon);
+          // $respon = array('status'=>200,'data'=>$dataCalon,'message'=>'OK!');
+          // return response()->json($respon);
+          $res['status'] = 200;
+          // $res['code'] = 200;
+          $res['data'] = $dataCalon;
+          $res['message'] = "Success!";
+          return response($res);
         } else {
-          $respon = array('status'=>400,'data'=>'No Data','message'=>'OK!');
+          $respon = array('status'=>400,'data'=>'No Data','message'=>'NO!');
           return response()->json($respon);
         }
     }
-    
+
 
     public function updateDataTpsSuara(Request $request){
 
+        $idtps = $request->id;
         $suarasah = $request->suarasah;
         $suaratidaksah = $request->suaratidaksah;
-        $idtps = $request->idtps;
+        $notps = $request->idtps;
         $dpt = $request->dpt;
+        $tidakdigunakan = $request->tidakdigunakan;
         $c1 = $request->imagesc1;
         // echo str_replace(' ', '+',$c1);
         // die;
@@ -110,14 +184,15 @@ class ControllerLogin extends Controller
 
         $name = md5(time()+$suarasah+$suaratidaksah);
         $type = image_type_to_extension($imginf[2]);
-        rename($tmp, "./c1/$name$type");
+        rename($tmp, "./tmp_c1/$name$type");
 
 
 
         $array = [
-            'id'=>$idtps,
+            'no_tps'=>$notps,
             'total_suara'=>$suarasah,
             'suara_tidak_sah'=>$suaratidaksah,
+            'suara_tidak_digunakan'=>$tidakdigunakan,
             'images'=> "$name$type",
             'jumlah_dpt'=>$dpt
         ];

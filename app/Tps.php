@@ -13,7 +13,7 @@ class Tps extends Model
     protected $table = 'tps';
     protected $fillable = [
         'prov_id', 'kab_id', 'kec_id', 'kel_id', 'no_tps','total_suara',
-         'suara_tidak_sah','threshold','id_pemilihan','saksi_id','lembaga_id','is_sample','images','jumlah_dpt'
+         'suara_tidak_sah','threshold','id_pemilihan','saksi_id','lembaga_id','is_sample','images','jumlah_dpt','suara_tidak_digunakan'
     ];
     protected $primaryKey = 'id';
 

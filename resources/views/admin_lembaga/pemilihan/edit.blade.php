@@ -6,8 +6,8 @@
 
 @section('content')
 	{!! Form::model($item, [
-			'action' => ['Admin_lembaga\PemilihanController@update', $item->id],
-			'method' => 'put', 
+			'action' => ['admin_lembaga/pemilihan/', $item->id],
+			'method' => 'put',
 			'files' => true
 		])
 	!!}
@@ -16,7 +16,7 @@
 
 		<button type="submit" class="btn btn-primary">{{ trans('Submit') }}</button>
 		<button type="submit" class="btn btn-danger">{{ trans('Cancel') }}</button>
-		
+
 	{!! Form::close() !!}
-	
+
 @stop

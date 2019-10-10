@@ -183,4 +183,12 @@ class TpsController extends Controller
 
         return back()->withSuccess(trans('app.success_destroy'));
     }
+
+    // public function downloadImage($id)
+    // {
+    //     $id1=Tps::where('id',$id)->first();
+    //     $download = Tps::where('id', $id1->id)->first();
+    //     $path = public_path(). '/c1/'. $download->images;
+    //     return response()->download($path, $download->filename);
+    // }
 }

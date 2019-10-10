@@ -53,6 +53,7 @@ class TpsPemilihanController extends Controller
     {
         $lembagaId = Auth::user()->lembaga_id;
         $pemilihan = Pemilihan::findOrFail($id);
+        // dd(Kecamatan::all()->random());
         $allTps = Tps::whereIdPemilihan($pemilihan->id)->whereLembagaId($lembagaId)->get();
         return view('admin_lembaga.tps_pemilihan.index', compact('allTps', 'pemilihan', 'id'));
     }
@@ -80,9 +81,9 @@ class TpsPemilihanController extends Controller
         foreach($kecamatan as $item){
             $kecamatan_untuk_select2[$item->id_kec] = $item->nama;
         }
-        foreach($saksis as $item){
-            $saksi_untuk_select2[$item->id] = $item->nama;
-        }
+        // foreach($saksis as $item){
+        //     $saksi_untuk_select2[$item->id] = $item->nama;
+        // }
         return view('admin_lembaga.tps_pemilihan.create', compact('id','pemilihan','provinsi_untuk_select2','kabupaten_untuk_select2','kecamatan_untuk_select2','saksi_untuk_select2'));
     }
 
@@ -185,8 +186,6 @@ class TpsPemilihanController extends Controller
             $daerah = Kecamatan::whereIdKab($pemilihan->kab_id)->get();
         }
         $total = collect([]);
-        // $total = 0;
-        // return response()->json($daerah);
         foreach ($daerah as $key => $item) {
             if ($pemilihan->jenis == 'gubernur') {
                 $allTps = Tps::whereIdPemilihan($pemilihan->id)
@@ -199,18 +198,16 @@ class TpsPemilihanController extends Controller
                     ->whereKecId($item->id_kec)
                     ->get();
             }
-
             $resultTemp = collect([]);
             if (! is_null($allTps)) {
                 $populasi = $allTps->count();
                 if ($populasi == 0) {
-                    continue;
+                  continue;
                 }
                 $threshold = $request->threshold * $request->threshold;
                 $temp = round($populasi / (1 + ($populasi * $threshold)));
                 $jumlahSampel = $temp > 0 ? $temp : 1;
-                // $total->push([$populasi, $jumlahSampel]);
-                $interval = floor($populasi / $jumlahSampel);
+                $interval = round($populasi / $jumlahSampel);
                 for($i = 0; $i < $populasi; $i++){
                     if ($resultTemp->count() == $jumlahSampel) {
                         break;
@@ -224,21 +221,19 @@ class TpsPemilihanController extends Controller
                         $data['kelurahan'] = $allTps[$i]->kelurahan->nama;
                         $data['total_suara'] = $allTps[$i]->total_suara;
                         $data['suara_tidak_sah'] = $allTps[$i]->suara_tidak_sah;
-                        $data['jumlah_dpt'] = $allTps[$i]->total_suara + $allTps[$i]->suara_tidak_sah;
+                        $data['suara_tidak_digunakan'] = $allTps[$i]->suara_tidak_digunakan;
+                        $data['jumlah_dpt'] = $allTps[$i]->total_suara + $allTps[$i]->suara_tidak_sah + $allTps[$i]->suara_tidak_digunakan;
                         $resultTemp->push($data);
                     }
                     $total->push(['populasi' => $populasi, 'jumlah_sampel_seharusnya' => $jumlahSampel, 'interval' => $interval, 'jumlah_sampel_diambil' => $resultTemp->count(), 'populasi_ke' => ($i+1)]);
                 }
                 $result->push($resultTemp->toArray());
             }
-
         }
-        // return response()->json($total);
         $message = 'Pengambilan sampel berhasil.';
         return response()->json([
             'message' => $message,
-            'data' => $result->collapse(),
-            'proses_pengambilan_sampel' => $total
+            'data' => $result->collapse()
         ], $code);
     }
 }

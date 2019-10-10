@@ -26,10 +26,10 @@
                 </a>
                 <ul class="dropdown-menu fsz-sm">
                     <li>
-                        <a href="/profil/{{ Auth::user()->id }} " class="d-b td-n pY-5 bgcH-grey-100 c-grey-700">
+                        <!-- <a href="/profil/{{ Auth::user()->id }} " class="d-b td-n pY-5 bgcH-grey-100 c-grey-700">
                             <i class="ti-user mR-10"></i>
                             <span>Profil</span>
-                        </a>
+                        </a> -->
                         <a href="/logout" class="d-b td-n pY-5 bgcH-grey-100 c-grey-700">
                             <i class="ti-power-off mR-10"></i>
                             <span>Logout</span>

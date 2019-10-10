@@ -81,9 +81,9 @@ class TpsController extends Controller
         foreach($kecamatan as $item){
             $kecamatan_untuk_select2[$item->id_kec] = $item->nama;
         }
-        foreach($saksis as $item){
-            $saksi_untuk_select2[$item->id] = $item->nama;
-        }
+        // foreach($saksis as $item){
+        //     $saksi_untuk_select2[$item->id] = $item->nama;
+        // }
 
         return view('admin_lembaga.tps.create', compact('provinsi_untuk_select2','kabupaten_untuk_select2','kecamatan_untuk_select2','saksi_untuk_select2'));
     }
@@ -177,7 +177,7 @@ class TpsController extends Controller
     {
         $id1=Tps::where('id',$id)->first();
         $download = Tps::where('id', $id1->id)->first();
-        $path = public_path(). '/c1/'. $download->images;
+        $path = public_path(). '/tmp_c1/'. $download->images;
         return response()->download($path, $download->filename);
     }
 
@@ -186,21 +186,22 @@ class TpsController extends Controller
         $lembaga_id = Auth::user()->lembaga_id;
 
         $all_tps_lembaga = Tps::where('lembaga_id', $lembaga_id)->get();
+        // dd($all_tps_lembaga);
         $seluruh_tps_yang_diinput_admin_lembaga = Tps::where('lembaga_id', $lembaga_id)->orderBy('no_tps','asc')->get();
         $populasi = (int) $seluruh_tps_yang_diinput_admin_lembaga->count();
         $threshold = $request->threshold * $request->threshold;
         $jumlah_sampel = floor($populasi / (1 + $populasi * $threshold));
         $interval = $populasi / $jumlah_sampel;
-        $decimal = floor($interval);
-        $fraksi = $interval - $decimal;
-        if($fraksi < 0.5){
-            $pembulatan = floor($interval);
+
+        if ($interval % 1 >= 0.5) {
+            $interval = ceil($interval);
         } else {
-            $pembulatan = ceil($interval);
+            $interval = floor($interval);
         }
+
         for($x = 0; $x < $populasi; $x++){
             $this_tps = $all_tps_lembaga[$x];
-            if($x % $pembulatan == 0){
+            if($x % $interval == 0){
                 // sampel
                 $data = array(
                     'is_sample' => 1

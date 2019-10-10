@@ -44,9 +44,10 @@ class LoginSuperController extends Controller
             return '/admin';
         } elseif($role == 15){
             return '/admin_lembaga';
-        } elseif($role == 20){
-            return '/saksi';
         }
+        //elseif($role == 20){
+        //     return '/saksi';
+        // }
     }
 
     public function showLogin(){

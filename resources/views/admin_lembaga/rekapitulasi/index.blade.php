@@ -14,20 +14,20 @@
                         <form method="POST" id="filter-rekapitulasi">
                             @csrf
                             <div class="row">
-                                <div class="col-md">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="tahun">Tahun Pemilihan</label>
                                         <select name="tahun" id="tahun" class="form-control select2">
-                                            @foreach($pemilihan as $item)
-                                                <option value="{{ $item->tahun }}">{{ $item->tahun }}</option>
+                                            @foreach($tahun as $item)
+                                                <option value="{{ $item }}">{{ $item }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md">
+                                <div class="col-md-4">
                                     {!! Form::mySelect('jenis', 'Jenis Pemilihan', config('variables.jenis_pil'), isset($item->jenis) ? $item->jenis : null, ['class' => 'form-control select2']) !!}
                                 </div>
-                                <div class="col-md">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="jenis-filter">Jenis Filter</label>
                                         <select id="jenis-filter" name="filter" class="form-control select2">
@@ -38,18 +38,6 @@
                                         </select>
                                     </div>
                                 </div>
-                                @if(Auth::user()->role == 10)
-                                <div class="col-md">
-                                    <div class="form-group">
-                                        <label for="lembaga_survey">Lembaga Survey</label>
-                                        <select id="lembaga_survey" name="lembaga_survey" class="form-control select2">
-                                            @foreach($lembaga as $item)
-                                                <option value="{{ $item->id }}">{{ $item->nama }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                @endif
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
@@ -164,6 +152,7 @@
             let chartData = {
                 nama_pasangan: [],
                 total_suara: [],
+                total_suara_persentase: []
             }
             tableResultDOM.empty()
             if (chart) {
@@ -174,63 +163,83 @@
                 url: route('ajax.filter'),
                 data: filterForm.serialize(),
                 success: function (r) {
-                    let tableContent = `<thead><tr><th>No.</th><th>TPS</th>`
-                    $.each(r.calon, function (i, v) {
-                      let namaPasangan = `${v.calon_utama_nama} & ${v.calon_wakil_nama}`
-                      tableContent += `<th>${namaPasangan}</th>`
-                      chartData.nama_pasangan.push(namaPasangan)
-                    });
-                    tableContent += `</tr></thead><tbody>`
-                    let count = 0
+                    if (r.calon.length == 0) {
+                        alert('Error: Tidak ada data.')
+                    } else {
+                        let tableContent = `<thead><tr><th>No.</th><th>TPS</th>`
+                        $.each(r.calon, function (i, v) {
+                          let namaPasangan = `${v.calon_utama_nama} & ${v.calon_wakil_nama}`
+                          tableContent += `<th>${namaPasangan}</th>`
+                          chartData.nama_pasangan.push(namaPasangan)
+                        });
+                        tableContent += `</tr></thead><tbody>`
+                        let count = 0
 
-                    $.each(r.suara, function (i, v) {
-                        count ++
-                        tableContent += `<tr><td>${count}</td><td>${i.split('_').join(' ')}</td>`
-                        $.each(v, function (x, val) {
+                        $.each(r.suara, function (i, v) {
+                          count ++
+                          tableContent += `<tr><td>${count}</td><td>${i.split('_').join(' ')}</td>`
+                          $.each(v, function (x, val) {
                             let index = parseInt(val)
                             tableContent += `<td>${val} suara</td>`
+                          });
+                          tableContent += `</tr>`
                         });
-                        tableContent += `</tr>`
-                    });
-                    tableResultDOM.append(tableContent)
-                    tableResultDOM.DataTable().destroy()
-                    tableResultDOM.DataTable({
-                        dom: 'Bfrtip',
-                        buttons: [
+                        tableResultDOM.append(tableContent)
+                        if ($.fn.DataTable.isDataTable(tableResultDOM)) {
+                          tableResultDOM.DataTable().destroy()
+                        }
+                        tableResultDOM.DataTable({
+                          dom: 'Bfrtip',
+                          buttons: [
                             'pdfHtml5',
-                        ]
-                    })
+                          ]
+                        })
 
-                    $.each(r.total, function (i, v) {
-                        chartData.total_suara.push(v)
-                    });
+                        $.each(r.total, function (i, v) {
+                          chartData.total_suara.push(v)
+                          let persentase = parseFloat(v / r.total_suara * 100).toFixed(2);
+                          chartData.total_suara_persentase.push(persentase)
+                        });
 
-                    chart = new Chart(chartDOM, {
-                        type: 'bar',
-                        data: {
+                        chart = new Chart(chartDOM, {
+                          type: 'bar',
+                          data: {
                             labels: chartData.nama_pasangan,
                             datasets: [{
-                                label: 'Total Suara',
-                                data: chartData.total_suara,
-                                backgroundColor: '#aea8d3',
-                                borderWidth: 1
+                              label: 'Total Suara',
+                              data: chartData.total_suara_persentase,
+                              backgroundColor: '#aea8d3',
+                              borderWidth: 1
                             }]
-                        },
-                        options: {
+                          },
+                          options: {
                             scales: {
-                                yAxes: [{
-                                    ticks: {
-                                        beginAtZero: true
-                                    }
-                                }]
+                              yAxes: [{
+                                ticks: {
+                                  beginAtZero: true
+                                }
+                              }]
+                            },
+                            tooltips: {
+                              callbacks: {
+                                label: function(tooltipItem, data) {
+                                  var label = data.datasets[tooltipItem.datasetIndex].label || '';
+                                  if (label) {
+                                    label += ': ';
+                                  }
+                                  label += tooltipItem.yLabel + '% (' + chartData.total_suara[tooltipItem.index] + ' suara)';
+                                  return label;
+                                }
+                              }
                             }
-                        }
-                    })
+                          }
+                        })
+                    }
                 },
                 error: function (xhr, textStatus, error) {
                     console.log(xhr)
                     if (xhr.status == 419) {
-                        alert('Terjadi kesalahan. Halaman akan dimuat ulang halaman!')
+                        alert('Terjadi kesalahan. Halaman akan dimuat ulang!')
                         location.reload()
                     } else {
                         alert('Error: ' + xhr.responseJSON.message)
@@ -254,7 +263,7 @@
                 },
                 error: function (xhr, textStatus, error) {
                     if (xhr.status == 419) {
-                        alert('Terjadi kesalahan. Halaman akan dimuat ulang halaman!')
+                        alert('Terjadi kesalahan. Halaman akan dimuat ulang!')
                         location.reload()
                     } else {
                         alert('Error: ' + xhr.responseJSON.message)
@@ -279,7 +288,7 @@
                 error: function (xhr, textStatus, error) {
                     console.log(xhr)
                     if (xhr.status == 419) {
-                        alert('Terjadi kesalahan. Halaman akan dimuat ulang halaman!')
+                        alert('Terjadi kesalahan. Halaman akan dimuat ulang!')
                         location.reload()
                     } else {
                         alert('Error: ' + xhr.responseJSON.message)
@@ -304,7 +313,7 @@
                 error: function (xhr, textStatus, error) {
                     console.log(xhr)
                     if (xhr.status == 419) {
-                        alert('Terjadi kesalahan. Halaman akan dimuat ulang halaman!')
+                        alert('Terjadi kesalahan. Halaman akan dimuat ulang!')
                         location.reload()
                     } else {
                         alert('Error: ' + xhr.responseJSON.message)

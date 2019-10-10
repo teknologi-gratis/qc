@@ -11,7 +11,7 @@ class User extends Authenticatable
 {
     use Notifiable;
 
-    
+
 
     /**
      * The attributes that are mass assignable.
@@ -21,7 +21,7 @@ class User extends Authenticatable
     protected $table = 'users';
      protected $primaryKey = 'id';
     protected $fillable = [
-        'nama', 'email', 'password', 'avatar', 'bio', 'role','id_pemilihan','lembaga_id', 'nik', 'kontak', 'no_tps'];
+        'nama', 'email', 'password', 'password_md5', 'avatar', 'bio', 'role','id_pemilihan','lembaga_id', 'nik', 'kontak', 'no_tps'];
 
     /**
      * The attributes that should be hidden for arrays.
@@ -32,7 +32,7 @@ class User extends Authenticatable
         'password', 'remember_token',
     ];
 
-    
+
 
     /**
      * The attributes that should be cast to native types.
@@ -70,6 +70,8 @@ class User extends Authenticatable
         ]);
     }
 
+
+
     /*
     |------------------------------------------------------------------------------------
     | Attributes
@@ -79,13 +81,13 @@ class User extends Authenticatable
     {
         $this->attributes['password'] = bcrypt($value);
     }
-    
+
     public function getAvatarAttribute($value)
     {
         if (!$value) {
             return 'http://placehold.it/160x160';
         }
-    
+
         return config('variables.avatar.public').$value;
     }
     public function setAvatarAttribute($photo)
@@ -103,7 +105,7 @@ class User extends Authenticatable
         parent::boot();
         static::updating(function ($user) {
             $original = $user->getOriginal();
-            
+
             if (\Hash::check('', $user->password)) {
                 $user->attributes['password'] = $original['password'];
             }

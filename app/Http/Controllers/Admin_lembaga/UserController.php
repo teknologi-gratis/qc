@@ -56,9 +56,9 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        
+
         $this->validate($request, User::rules());
-        
+
         User::create($request->all());
 
         return back()->withSuccess(trans('app.success_store'));
@@ -84,7 +84,7 @@ class UserController extends Controller
     public function edit($id)
     {
         $item = User::findOrFail($id);
-        
+
         return view('admin_lembaga.users.edit', compact('item'));
     }
 
@@ -116,33 +116,32 @@ class UserController extends Controller
     {
         User::destroy($id);
 
-        return back()->withSuccess(trans('app.success_destroy')); 
+        return back()->withSuccess(trans('app.success_destroy'));
     }
-    
+
     public function import_excel(Request $request)
     {
         	// validasi
 	    $this->validate($request, [
 		    'file' => 'required|mimes:csv,xls,xlsx'
 	    ]);
- 
+
 	    // menangkap file excel
 	    $file = $request->file('file');
- 
+
 	    // membuat nama file unik
 	    $nama_file = rand().$file->getClientOriginalName();
- 
+
 	    // upload ke folder file_siswa di dalam folder public
 	    $file->move('file_saksi_tps',$nama_file);
- 
+
 	    // import data
 	    Excel::import(new SaksiTpsImport, public_path('/file_saksi_tps/'.$nama_file));
- 
+
 	    // notifikasi dengan session
 	    Session::flash('sukses','Data Saksi Berhasil Diimport!');
- 
+
 	    // alihkan halaman kembali
 	    return redirect('/admin_lembaga/users');
-    }  
+    }
 }
-

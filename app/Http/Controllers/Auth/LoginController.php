@@ -42,11 +42,12 @@ class LoginController extends Controller
         $role = Auth::user()->role;
         if($role == 10){
             return '/admin';
-        } elseif($role == 15){
+        } else if($role == 15){
             return '/admin_lembaga';
-        } elseif($role == 20){
-            return '/saksi';
         }
+        // elseif($role == 20){
+        //     return '/saksi';
+        // }
     }
 
     public function logout(Request $request){

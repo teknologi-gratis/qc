@@ -12,11 +12,11 @@
             <i class="fa fa-plus"></i> {{ trans('app.add_button') }}
         </a>
         <a href="" class="btn btn-info pull-right mR-10 mT-5" data-toggle="modal" data-target="#importExcel">
-            <i class="fa fa-plus"></i> {{trans('Import Excel')}} 
+            <i class="fa fa-plus"></i> {{trans('Import Excel')}}
             </a>
     </div>
     <!-- <div class="bgc-white bd bdrs-3 pB-50">
-        
+
     </div> -->
     {{-- notifikasi form validasi --}}
 		@if ($errors->has('file'))
@@ -24,15 +24,15 @@
 			<strong>{{ $errors->first('file') }}</strong>
 		</span>
 		@endif
- 
+
 		{{-- notifikasi sukses --}}
 		@if ($sukses = Session::get('sukses'))
 		<div class="alert alert-success alert-block">
-			<button type="button" class="close" data-dismiss="alert">×</button> 
+			<button type="button" class="close" data-dismiss="alert">×</button>
 			<strong>{{ $sukses }}</strong>
 		</div>
 		@endif
- 
+
         		<!-- Import Excel -->
 		<div class="modal fade" id="importExcel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
 			<div class="modal-dialog" role="document">
@@ -42,14 +42,14 @@
 							<h5 class="modal-title" id="exampleModalLabel">Import Excel</h5>
 						</div>
 						<div class="modal-body">
- 
+
 							{{ csrf_field() }}
- 
+
 							<label>Pilih file excel</label>
 							<div class="form-group">
 								<input type="file" name="file" required="required">
 							</div>
- 
+
 						</div>
 						<div class="modal-footer">
 							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -59,7 +59,7 @@
 				</form>
 			</div>
 		</div>
- 
+
     <div class="bgc-white bd bdrs-3 p-20 mB-20">
         <table id="dataTable" class="table table-striped table-bordered" cellspacing="0" width="100%">
             <thead>
@@ -76,7 +76,7 @@
                     <th>Total Suara</th>
                     <th>Suara Tidak Sah</th>
                     <th>Apakah Sample</th>
-                    <th>Actions</th>
+                    <!-- <th>Actions</th> -->
                 </tr>
             </thead>
             <tbody>
@@ -92,7 +92,7 @@
                             {{ $item->provinsi->nama }}
                             @endif
                         </td>
-                        
+
                         <td>
                             @if(isset($item->kabupaten->nama))
                             {{ $item->kabupaten->nama }}
@@ -113,12 +113,16 @@
                         <td>{{ $item->no_tps }}</td>
                         <td>{{ $item->jumlah_dpt }}</td>
                         <td>
-                          
+
                             @if(!$item->images == "")
-                            <img src="{{url('c1/', $item->images)}}"> <a href="{{route('gambar.download', $item->id)}}" class="btn btn-success btn-mini">Download</a>
+                            <!-- Button untuk memnculkan modal nya -->
+                            <a class="thumbnail" href="#" data-image-id="" data-toggle="modal" data-target="#image-gallery">
+                                            <img class="img-responsive" src="{{url('c1/', $item->images)}}" alt="Belum Ada">
+                                        </a>
+
                             @else
                             Belum ada
-                            @endif 
+                            @endif
                         </td>
                         <td>{{ $item->total_suara }}</td>
                         <td>{{ $item->suara_tidak_sah }}</td>
@@ -129,29 +133,31 @@
                                 <p class="text-danger">Tidak</p>
                             @endif
                         </td>
-                        <td>
+                        <!-- <td>
                             <ul class="list-inline">
                                 <li class="list-inline-item">
                                     <a href="{{ route(ADMIN . '.tps.edit', $item->id) }}" title="{{ trans('app.edit_title') }}" class="btn btn-primary btn-sm"><span class="ti-pencil"></span></a></li>
                                 <li class="list-inline-item">
                                     {!! Form::open([
                                         'class'=>'delete',
-                                        'url'  => route(ADMIN . '.tps.destroy', $item->id), 
+                                        'url'  => route(ADMIN . '.tps.destroy', $item->id),
                                         'method' => 'DELETE',
-                                        ]) 
+                                        ])
                                     !!}
 
                                         <button class="btn btn-danger btn-sm" title="{{ trans('app.delete_title') }}"><i class="ti-trash"></i></button>
-                                        
+
                                     {!! Form::close() !!}
                                 </li>
                             </ul>
-                        </td>
+                        </td> -->
                     </tr>
                 @endforeach
             </tbody>
-        
+
         </table>
     </div>
-
+    <!-- Modal untuk Image -->
+    
+    <!-- End Javascript Modal Image -->
 @endsection

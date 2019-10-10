@@ -4,8 +4,9 @@ namespace App\Imports;
 
 use App\Tps;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 
-class TpsImport implements ToModel
+class TpsImport implements ToModel, WithCalculatedFormulas
 {
     /**
     * @param array $row
@@ -24,8 +25,9 @@ class TpsImport implements ToModel
             'jumlah_dpt' => $row[6],
             'total_suara'=> $row[7],
             'suara_tidak_sah'=> $row[8],
-            'lembaga_id'=> $row[9],
-            
+            'suara_tidak_digunakan'=> $row[9],
+            'lembaga_id'=> $row[10],
+
         ]);
     }
 }

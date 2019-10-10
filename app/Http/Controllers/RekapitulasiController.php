@@ -22,6 +22,7 @@ class RekapitulasiController extends Controller
     {
         $this->middleware('auth');
     }
+
     /**
      * Display a listing of the resource.
      *
@@ -29,29 +30,11 @@ class RekapitulasiController extends Controller
      */
     public function index()
     {
-        if (Auth::user()->role == 10) {
-            $pemilihan = Pemilihan::latest('updated_at')->get();
-            $lembaga = Lembaga_survey::select('id', 'nama')->get();
-        } else {
-            $pemilihan = Pemilihan::whereLembagaId(Auth::user()->lembaga_id)->latest('updated_at')->get();
-            $lembaga = [];
-        }
-
+        $pemilihan = Pemilihan::latest('updated_at')->get();
+        $lembaga = Lembaga_survey::select('id', 'nama')->get();
         $provinsi = Provinsi::select('nama', 'id_prov')->get();
 
-        return view('admin_lembaga.rekapitulasi.index', compact('provinsi', 'pemilihan', 'lembaga'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create(Request $request)
-    {
-        $this->validate($request, Tps::rules());
-        $tps = Tps::create($request->all());
-        return redirect('/rekapitulasi_suara'.$tps->id)->withSuccess(trans('app.success_store'));
+        return view('admin.rekapitulasi.index', compact('provinsi', 'pemilihan', 'lembaga'));
     }
 
     public function filter(Request $request)
@@ -61,11 +44,7 @@ class RekapitulasiController extends Controller
         $code = 200;
         $suaraTiapTPS = [];
         $totalSuaraTiapCalon = [];
-        if (Auth::user()->role == 10) {
-            $pemilihan = Pemilihan::whereLembagaId($request->lembaga_survey)->whereProvId($request->provinsi)->whereTahun($request->tahun)->first();
-        } else {
-            $pemilihan = Pemilihan::whereLembagaId(Auth::user()->lembaga_id)->whereProvId($request->provinsi)->whereTahun($request->tahun)->first();
-        }
+        $pemilihan = Pemilihan::whereLembagaId($request->lembaga_survey)->whereProvId($request->provinsi)->whereTahun($request->tahun)->first();
 
         if (! is_null($pemilihan)) {
             $semuaCalon = Calon::wherePemilihanId($pemilihan->id)->get();
